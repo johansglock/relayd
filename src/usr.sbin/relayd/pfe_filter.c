@@ -509,6 +509,14 @@ sync_ruleset(struct relayd *env, struct rdr *rdr, int enable)
 #ifdef PFRULE_STATESLOPPY
 			rio.rule.rule_flag = PFRULE_STATESLOPPY;
 #endif
+
+#ifdef __FreeBSD__
+			if(env->sc_maxsrcstates > 0) {
+				rio.rule.max_src_states = env->sc_maxsrcstates;
+				rio.rule.rule_flag |= PFRULE_SRCTRACK;
+				rio.rule.rule_flag |= PFRULE_RULESRCTRACK;
+			}
+#endif
 			break;
 		default:
 			fatalx("sync_ruleset: invalid forward mode");

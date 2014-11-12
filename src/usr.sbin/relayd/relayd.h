@@ -1038,6 +1038,9 @@ struct relayd {
 	int			 sc_rtsock;
 	int			 sc_rtseq;
 #endif
+#ifdef __FreeBSD__
+	int			 sc_maxsrcstates;
+#endif
 	int			 sc_tablecount;
 	int			 sc_rdrcount;
 	int			 sc_protocount;

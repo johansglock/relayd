@@ -166,7 +166,7 @@ typedef struct {
 %token	ALL APPEND BACKLOG BACKUP BUFFER CA CACHE SET CHECK CIPHERS CODE
 %token	COOKIE DEMOTE DIGEST DISABLE ERROR EXPECT PASS BLOCK EXTERNAL FILENAME
 %token	FORWARD FROM HASH HEADER HOST ICMP INCLUDE INET INET6 INTERFACE
-%token	INTERVAL IP LABEL LISTEN VALUE LOADBALANCE LOG LOOKUP METHOD MODE NAT
+%token	INTERVAL IP LABEL LISTEN VALUE LOADBALANCE LOG LOOKUP MAXSRCSTATES METHOD MODE NAT
 %token	NO DESTINATION NODELAY NOTHING ON PARENT PATH PFTAG PORT PREFORK
 %token	PRIORITY PROTO QUERYSTR REAL REDIRECT RELAY REMOVE REQUEST RESPONSE
 %token	RETRY QUICK RETURN ROUNDROBIN ROUTE SACK SCRIPT SEND SESSION SNMP
@@ -182,7 +182,7 @@ DESTINATION PRIORITY ROUTER RTLABEL RTABLE MATCH
 %token	ALL APPEND BACKLOG BACKUP BUFFER CA CACHE SET CHECK CIPHERS CODE
 %token	COOKIE DEMOTE DIGEST DISABLE ERROR EXPECT PASS BLOCK EXTERNAL FILENAME
 %token	FORWARD FROM HASH HEADER HOST ICMP INCLUDE INET INET6 INTERFACE
-%token	INTERVAL IP LABEL LISTEN VALUE LOADBALANCE LOG LOOKUP METHOD MODE NAT
+%token	INTERVAL IP LABEL LISTEN VALUE LOADBALANCE LOG LOOKUP MAXSRCSTATES METHOD MODE NAT
 %token	NO NODELAY NOTHING ON PARENT PATH PFTAG PORT PREFORK
 %token	PROTO QUERYSTR REAL REDIRECT RELAY REMOVE REQUEST RESPONSE
 %token	RETRY QUICK RETURN ROUNDROBIN ROUTE SACK SCRIPT SEND SESSION SNMP
@@ -194,7 +194,7 @@ DESTINATION PRIORITY ROUTER RTLABEL RTABLE MATCH
 %token  <v.number>	NUMBER
 %type	<v.string>	hostname interface table value optstring
 %type	<v.number>	http_type loglevel quick trap
-%type	<v.number>	dstmode flag forwardmode retry
+%type	<v.number>	dstmode flag forwardmode maxsrcstates retry
 %type	<v.number>	optssl optsslclient sslcache
 %type	<v.number>	redirect_proto relay_proto match
 %type	<v.number>	action ruleaf key_option
@@ -386,6 +386,11 @@ main		: INTERVAL NUMBER	{
 			if (loadcfg)
 				break;
 			conf->sc_opts |= $2;
+		}
+		| MAXSRCSTATES maxsrcstates {
+			if(loadcfg)
+				break;
+			conf->sc_maxsrcstates = $2;
 		}
 		| TIMEOUT timeout	{
 			if (loadcfg)
@@ -2046,6 +2051,15 @@ retry		: /* empty */		{ $$ = 0; }
 		}
 		;
 
+maxsrcstates: NUMBER
+		{
+			if ($1 < 0) {
+				yyerror("invalid max src states: %d\n", $1);
+				YYERROR;
+			}
+		}
+		;
+
 timeout		: NUMBER
 		{
 			if ($1 < 0) {
@@ -2152,6 +2166,7 @@ lookup(char *s)
 		{ "log",		LOG },
 		{ "lookup",		LOOKUP },
 		{ "match",		MATCH },
+		{ "maxsrcstates",	MAXSRCSTATES },
 		{ "method",		METHOD },
 		{ "mode",		MODE },
 		{ "nat",		NAT },
